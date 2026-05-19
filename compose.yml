@@ -1,0 +1,15 @@
+services:
+  postgres:
+    build: .
+    container_name: data_warehouse_cdmx
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: data_warehouse
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:
