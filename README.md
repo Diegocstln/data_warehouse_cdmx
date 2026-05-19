@@ -19,10 +19,10 @@ Proyecto de Data Warehouse para analizar la correlación entre el consumo de agu
 
 Este Data Warehouse integra dos fuentes de datos:
 
-| Fuente | Descripción | Granularidad |
-|--------|-------------|--------------|
-| **Consumo de Agua** | Datos históricos de consumo de agua por colonia/alcaldía | Bimestral (3 bimestres: feb, abr, jun 2019) |
-| **Clima** | Datos meteorológicos de Open-Meteo (estación CDMX) | Diaria (181 días correspondientes a los bimestres 1-3) |
+| Fuente              | Descripción                                              | Granularidad                                           |
+| ------------------- | -------------------------------------------------------- | ------------------------------------------------------ |
+| **Consumo de Agua** | Datos históricos de consumo de agua por colonia/alcaldía | Bimestral (3 bimestres: feb, abr, jun 2019)            |
+| **Clima**           | Datos meteorológicos de Open-Meteo (estación CDMX)       | Diaria (181 días correspondientes a los bimestres 1-3) |
 
 **Objetivo:** Analizar la correlación entre el consumo de agua y las condiciones climáticas (temperatura, lluvia, humedad).
 
@@ -96,10 +96,10 @@ fact_clima ───────────────────────
 
 ### Tablas de Staging (temporales)
 
-| Tabla | Uso |
-|-------|-----|
+| Tabla             | Uso                                          |
+| ----------------- | -------------------------------------------- |
 | `staging_consumo` | Recibe datos crudos de consumo antes del ETL |
-| `staging_clima` | Recibe datos crudos de clima antes del ETL |
+| `staging_clima`   | Recibe datos crudos de clima antes del ETL   |
 
 ---
 
@@ -246,10 +246,10 @@ ORDER BY a.anio, a.bimestre;
 ### Resultado esperado
 
 | anio | bimestre | total_agua | temp_promedio | dias_ola_calor | dias_frio | total_lluvia |
-|------|----------|------------|---------------|----------------|-----------|--------------|
-| 2019 | 1 | X | Y | Z | W | V |
-| 2019 | 2 | X | Y | Z | W | V |
-| 2019 | 3 | X | Y | Z | W | V |
+| ---- | -------- | ---------- | ------------- | -------------- | --------- | ------------ |
+| 2019 | 1        | X          | Y             | Z              | W         | V            |
+| 2019 | 2        | X          | Y             | Z              | W         | V            |
+| 2019 | 3        | X          | Y             | Z              | W         | V            |
 
 ---
 
@@ -263,26 +263,6 @@ PostgreSQL ejecuta automáticamente los archivos `.sql` en `/docker-entrypoint-i
 2. `1_copy.sql` → Carga staging
 3. `2_dim.sql` → Puebla dimensiones
 4. `3_fact.sql` → Puebla hechos
-
-### Cambios realizados al esquema original
-
-| Cambio | Razón |
-|--------|-------|
-| `dim_ubicacion` sin lat/long | Las coordenadas variaban por sub-zona de colonia; el análisis no requiere precisión geográfica |
-| `dim_tiempo` poblado desde staging_clima | Los datos climáticos tienen granularidad diaria (365 días); datos de consumo son bimestrales |
-| Bimestre calculado con CASE | El bimestre se calcula dinámicamente desde el mes |
-
-### Volumen de datos
-
-| Tabla | Registros aproximados |
-|-------|----------------------|
-| staging_consumo | 71,000 |
-| staging_clima | 4,300 |
-| dim_tiempo | 181 |
-| dim_ubicacion | ~700 |
-| dim_indice_des | 4 |
-| fact_consumo_agua | 71,000 |
-| fact_clima | 181 |
 
 ---
 
