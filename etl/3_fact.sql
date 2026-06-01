@@ -53,6 +53,24 @@ FROM staging_clima s
 JOIN dim_tiempo t ON DATE(s.fecha_hora) = t.fecha
 GROUP BY t.id_tiempo;
 
+-- Validaciones mínimas de carga. Si alguna falla, la inicialización se detiene.
+DO $$
+DECLARE
+    consumo_count INT;
+    clima_count INT;
+BEGIN
+    SELECT COUNT(*) INTO consumo_count FROM fact_consumo_agua;
+    SELECT COUNT(*) INTO clima_count FROM fact_clima;
+
+    IF consumo_count = 0 THEN
+        RAISE EXCEPTION 'fact_consumo_agua quedó vacía; revisar fechas y joins del ETL';
+    END IF;
+
+    IF clima_count = 0 THEN
+        RAISE EXCEPTION 'fact_clima quedó vacía; revisar carga de staging_clima';
+    END IF;
+END $$;
+
 -- ============================================
 -- LIMPIEZA: Eliminar tablas staging
 -- ============================================

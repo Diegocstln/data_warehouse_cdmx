@@ -42,7 +42,11 @@ data_warehouse/
 │   ├── 2_dim.sql         # Poblamiento de dimensiones
 │   └── 3_fact.sql        # Poblamiento de tablas de hechos
 ├── scripts/
-│   └── consulta.sql        # Consulta de análisis
+│   ├── consulta.sql        # Consulta principal de análisis
+│   ├── analisis_extra.sql  # Consultas complementarias
+│   └── validaciones.sql    # Controles de calidad e integridad
+├── docs/
+│   └── analisis_mejoras.md # Diagnóstico y mejoras aplicadas
 └── data/
     ├── consumo_agua_historico_2019.csv   # Datos de consumo
     └── open-meteo-19.44N99.11W2233m.csv # Datos climáticos
@@ -66,7 +70,9 @@ dim_tiempo (SCD - Slowly Changing Dimension)
 dim_ubicacion
 ├── id_ubicacion (PK)
 ├── alcaldia
-└── colonia
+├── colonia
+├── latitud
+└── longitud
 
 dim_indice_des (Índice de Desarrollo)
 ├── id_indice_des (PK)
@@ -145,10 +151,22 @@ SELECT COUNT(*) FROM fact_clima;
 SELECT COUNT(DISTINCT fecha) FROM dim_tiempo;
 ```
 
+También puedes ejecutar el script de validaciones incluido:
+
+```bash
+docker exec -it data_warehouse_cdmx psql -U postgres -d data_warehouse -f /docker-entrypoint-initdb.d/scripts/validaciones.sql
+```
+
 ### 5. Ejecutar la consulta de análisis
 
 ```bash
 docker exec -it data_warehouse_cdmx psql -U postgres -d data_warehouse -f /docker-entrypoint-initdb.d/scripts/consulta.sql
+```
+
+Consultas complementarias:
+
+```bash
+docker exec -it data_warehouse_cdmx psql -U postgres -d data_warehouse -f /docker-entrypoint-initdb.d/scripts/analisis_extra.sql
 ```
 
 O dentro de psql:
@@ -170,6 +188,24 @@ Crea el esquema completo de la base de datos:
 1. Tablas de staging (temporales para ETL)
 2. Dimensiones (dim_tiempo, dim_ubicacion, dim_indice_des)
 3. Tablas de hechos (fact_consumo_agua, fact_clima)
+4. Vistas analiticas para consumo, clima y correlacion
+
+### Vistas de analisis
+
+El modelo incluye vistas listas para consulta directa:
+
+- `vw_consumo_clima_bimestral`: consumo y clima agregados por bimestre.
+- `vw_consumo_por_alcaldia`: consumo por alcaldia y bimestre.
+- `vw_consumo_por_indice_desarrollo`: consumo por indice de desarrollo y bimestre.
+- `vw_correlacion_clima_consumo`: correlacion entre consumo, temperatura y lluvia.
+
+Ejemplos:
+
+```sql
+SELECT * FROM vw_consumo_clima_bimestral;
+SELECT * FROM vw_consumo_por_alcaldia ORDER BY total_agua DESC LIMIT 10;
+SELECT * FROM vw_correlacion_clima_consumo;
+```
 
 ### ETL (Extract, Transform, Load)
 
@@ -188,7 +224,7 @@ Inserta los datos en las tablas de dimensiones:
 
 - `dim_ubicacion`: Colonias y alcaldías únicas
 - `dim_indice_des`: Valores únicos de índice de desarrollo
-- `dim_tiempo`: Fechas diarias únicas (calculadas desde datos climáticos)
+- `dim_tiempo`: Fechas únicas desde clima diario y consumo bimestral
 
 #### 3_fact.sql - Poblamiento de tablas de hechos
 
@@ -196,6 +232,7 @@ Inserta los datos agregados en las tablas de hechos:
 
 - `fact_consumo_agua`: Une staging_consumo con dimensiones
 - `fact_clima`: Agrega datos climáticos por día (MAX, MIN, AVG, SUM)
+- Valida que las tablas de hechos no queden vacías
 - Elimina las tablas de staging
 
 ---
