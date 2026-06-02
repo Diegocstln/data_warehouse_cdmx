@@ -17,6 +17,19 @@
     </header>
 
     <main class="layout">
+      <section class="filters" aria-label="Filtros del dashboard">
+        <div>
+          <p class="eyebrow">Filtro</p>
+          <h2>Bimestre analizado</h2>
+        </div>
+        <div class="segmented" role="group" aria-label="Seleccionar bimestre">
+          <button class="filter-button active" type="button" data-bimestre="">Todos</button>
+          <button class="filter-button" type="button" data-bimestre="1">B1</button>
+          <button class="filter-button" type="button" data-bimestre="2">B2</button>
+          <button class="filter-button" type="button" data-bimestre="3">B3</button>
+        </div>
+      </section>
+
       <section class="kpis" aria-label="Indicadores principales">
         <article class="metric">
           <span>Consumo total</span>

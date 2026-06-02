@@ -14,6 +14,11 @@ const colors = {
   gray: "#64757b",
 };
 
+let selectedBimestre = "";
+let climaChart;
+let alcaldiaChart;
+let indiceChart;
+
 async function getJson(url) {
   const response = await fetch(url);
   if (!response.ok) {
@@ -31,14 +36,20 @@ function labelBimestre(row) {
 }
 
 function renderKpis(data) {
-  setText("kpi-total", money.format(data.consumo_total));
-  setText("kpi-promedio", number.format(data.consumo_promedio));
+  setText("kpi-total", money.format(data.consumo_total ?? 0));
+  setText("kpi-promedio", number.format(data.consumo_promedio ?? 0));
   setText("kpi-bimestres", data.bimestres);
-  setText("kpi-correlacion", number.format(data.correlacion_consumo_temperatura));
+  setText(
+    "kpi-correlacion",
+    data.correlacion_consumo_temperatura === null
+      ? "N/D"
+      : number.format(data.correlacion_consumo_temperatura),
+  );
 }
 
 function renderClimaChart(rows) {
-  new Chart(document.getElementById("climaChart"), {
+  if (climaChart) climaChart.destroy();
+  climaChart = new Chart(document.getElementById("climaChart"), {
     type: "line",
     data: {
       labels: rows.map(labelBimestre),
@@ -75,7 +86,8 @@ function renderClimaChart(rows) {
 }
 
 function renderAlcaldiaChart(rows) {
-  new Chart(document.getElementById("alcaldiaChart"), {
+  if (alcaldiaChart) alcaldiaChart.destroy();
+  alcaldiaChart = new Chart(document.getElementById("alcaldiaChart"), {
     type: "bar",
     data: {
       labels: rows.map((row) => row.alcaldia),
@@ -100,7 +112,8 @@ function renderAlcaldiaChart(rows) {
 }
 
 function renderIndiceChart(rows) {
-  new Chart(document.getElementById("indiceChart"), {
+  if (indiceChart) indiceChart.destroy();
+  indiceChart = new Chart(document.getElementById("indiceChart"), {
     type: "doughnut",
     data: {
       labels: rows.map((row) => row.indice_des),
@@ -140,13 +153,21 @@ function renderTable(rows) {
     .join("");
 }
 
-async function init() {
+function apiUrl(path) {
+  const params = new URLSearchParams();
+  if (selectedBimestre) params.set("bimestre", selectedBimestre);
+  const query = params.toString();
+  return query ? `${path}?${query}` : path;
+}
+
+async function loadDashboard() {
   try {
+    setText("status", selectedBimestre ? `Cargando B${selectedBimestre}` : "Cargando datos");
     const [kpis, consumoClima, alcaldias, indices] = await Promise.all([
-      getJson("/api/kpis"),
-      getJson("/api/consumo-clima"),
-      getJson("/api/consumo-alcaldia?limit=10"),
-      getJson("/api/consumo-indice"),
+      getJson(apiUrl("/api/kpis")),
+      getJson(apiUrl("/api/consumo-clima")),
+      getJson(`${apiUrl("/api/consumo-alcaldia")}${selectedBimestre ? "&" : "?"}limit=10`),
+      getJson(apiUrl("/api/consumo-indice")),
     ]);
 
     renderKpis(kpis);
@@ -154,11 +175,23 @@ async function init() {
     renderAlcaldiaChart(alcaldias);
     renderIndiceChart(indices);
     renderTable(consumoClima);
-    setText("status", "Datos actualizados");
+    setText("status", selectedBimestre ? `Filtro B${selectedBimestre}` : "Datos actualizados");
   } catch (error) {
     console.error(error);
     setText("status", "Error al cargar");
   }
 }
 
-init();
+function initFilters() {
+  document.querySelectorAll(".filter-button").forEach((button) => {
+    button.addEventListener("click", () => {
+      selectedBimestre = button.dataset.bimestre;
+      document.querySelectorAll(".filter-button").forEach((item) => item.classList.remove("active"));
+      button.classList.add("active");
+      loadDashboard();
+    });
+  });
+}
+
+initFilters();
+loadDashboard();
