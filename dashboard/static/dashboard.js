@@ -50,26 +50,29 @@ function renderKpis(data) {
 function renderClimaChart(rows) {
   if (climaChart) climaChart.destroy();
   climaChart = new Chart(document.getElementById("climaChart"), {
-    type: "line",
+    type: "bar",
     data: {
       labels: rows.map(labelBimestre),
       datasets: [
         {
           label: "Consumo total",
+          type: "bar",
           data: rows.map((row) => row.total_agua),
           borderColor: colors.blue,
-          backgroundColor: "rgba(37, 99, 235, 0.12)",
+          backgroundColor: "rgba(37, 99, 235, 0.72)",
+          borderRadius: 4,
           yAxisID: "y",
-          tension: 0.25,
-          fill: true,
         },
         {
           label: "Temperatura promedio",
+          type: "line",
           data: rows.map((row) => row.temp_promedio),
           borderColor: colors.red,
           backgroundColor: "rgba(194, 65, 53, 0.12)",
           yAxisID: "y1",
           tension: 0.25,
+          pointRadius: rows.length === 1 ? 7 : 4,
+          pointHoverRadius: rows.length === 1 ? 9 : 6,
         },
       ],
     },
