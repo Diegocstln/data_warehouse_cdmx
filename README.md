@@ -45,6 +45,10 @@ data_warehouse/
 │   ├── consulta.sql        # Consulta principal de análisis
 │   ├── analisis_extra.sql  # Consultas complementarias
 │   └── validaciones.sql    # Controles de calidad e integridad
+├── dashboard/
+│   ├── app.py              # API FastAPI para el dashboard
+│   ├── templates/          # Pagina HTML
+│   └── static/             # CSS y JavaScript
 ├── docs/
 │   └── analisis_mejoras.md # Diagnóstico y mejoras aplicadas
 └── data/
@@ -126,6 +130,12 @@ cd data_warehouse
 docker compose up -d
 ```
 
+El dashboard queda disponible en:
+
+```text
+http://localhost:8000
+```
+
 ### 2. Verificar que el contenedor está corriendo
 
 ```bash
@@ -205,6 +215,28 @@ Ejemplos:
 SELECT * FROM vw_consumo_clima_bimestral;
 SELECT * FROM vw_consumo_por_alcaldia ORDER BY total_agua DESC LIMIT 10;
 SELECT * FROM vw_correlacion_clima_consumo;
+```
+
+### Dashboard web
+
+El proyecto incluye un dashboard con FastAPI y Chart.js. La pagina consume endpoints JSON que consultan las vistas del Data Warehouse:
+
+- `/api/kpis`
+- `/api/consumo-clima`
+- `/api/consumo-alcaldia`
+- `/api/consumo-indice`
+- `/api/correlacion`
+
+Para levantarlo:
+
+```bash
+docker compose up -d --build
+```
+
+Abrir:
+
+```text
+http://localhost:8000
 ```
 
 ### ETL (Extract, Transform, Load)

@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Dashboard DW CDMX</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+  </head>
+  <body>
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">Data Warehouse CDMX</p>
+        <h1>Consumo de agua y clima</h1>
+      </div>
+      <span class="status" id="status">Cargando datos</span>
+    </header>
+
+    <main class="layout">
+      <section class="kpis" aria-label="Indicadores principales">
+        <article class="metric">
+          <span>Consumo total</span>
+          <strong id="kpi-total">--</strong>
+        </article>
+        <article class="metric">
+          <span>Consumo promedio</span>
+          <strong id="kpi-promedio">--</strong>
+        </article>
+        <article class="metric">
+          <span>Bimestres</span>
+          <strong id="kpi-bimestres">--</strong>
+        </article>
+        <article class="metric">
+          <span>Correlación temp.</span>
+          <strong id="kpi-correlacion">--</strong>
+        </article>
+      </section>
+
+      <section class="panel wide">
+        <div class="panel-heading">
+          <h2>Consumo y temperatura por bimestre</h2>
+          <p>Comparativo agregado desde la vista bimestral.</p>
+        </div>
+        <div class="chart-wrap">
+          <canvas id="climaChart"></canvas>
+        </div>
+      </section>
+
+      <section class="grid">
+        <article class="panel">
+          <div class="panel-heading">
+            <h2>Top alcaldías</h2>
+            <p>Consumo total acumulado.</p>
+          </div>
+          <div class="chart-wrap">
+            <canvas id="alcaldiaChart"></canvas>
+          </div>
+        </article>
+
+        <article class="panel">
+          <div class="panel-heading">
+            <h2>Índice de desarrollo</h2>
+            <p>Distribución por clasificación.</p>
+          </div>
+          <div class="chart-wrap">
+            <canvas id="indiceChart"></canvas>
+          </div>
+        </article>
+      </section>
+
+      <section class="panel wide">
+        <div class="panel-heading">
+          <h2>Resumen bimestral</h2>
+          <p>Datos base de la vista analítica.</p>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Bimestre</th>
+                <th>Consumo total</th>
+                <th>Consumo prom.</th>
+                <th>Temp. prom.</th>
+                <th>Lluvia total</th>
+                <th>Olas calor</th>
+              </tr>
+            </thead>
+            <tbody id="summary-body"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <script src="/static/dashboard.js"></script>
+  </body>
+</html>
