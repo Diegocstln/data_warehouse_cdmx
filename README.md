@@ -239,6 +239,12 @@ Abrir:
 http://localhost:8000
 ```
 
+Guia completa para usuarios y exposicion:
+
+```text
+docs/guia_entrega.md
+```
+
 ### ETL (Extract, Transform, Load)
 
 #### 1_copy.sql - Carga de datos crudos
