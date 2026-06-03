@@ -7,9 +7,10 @@ const number = new Intl.NumberFormat("es-MX", {
 });
 
 const colors = {
-  blue: "#2563eb",
+  blue: "#2454d6",
   teal: "#0f9f8f",
   amber: "#c27a18",
+  magenta: "#b63778",
   red: "#c24135",
   gray: "#64757b",
 };
@@ -17,12 +18,14 @@ const colors = {
 const mapColors = ["#e8f4f8", "#b9e1e7", "#74c7d2", "#2f9fb8", "#176b8a"];
 
 let selectedBimestre = "";
+let selectedAlcaldia = "";
 let climaChart;
 let alcaldiaChart;
 let indiceChart;
 let consumoMap;
 let consumoLayer;
 let alcaldiasGeoJson;
+let latestMapRows = [];
 
 async function getJson(url) {
   const response = await fetch(url);
@@ -38,6 +41,10 @@ function setText(id, value) {
 
 function labelBimestre(row) {
   return `${row.anio} B${row.bimestre}`;
+}
+
+function currentPeriodLabel() {
+  return selectedBimestre ? `Bimestre ${selectedBimestre}` : "Todos los bimestres";
 }
 
 function normalizeName(value) {
@@ -73,7 +80,7 @@ function renderClimaChart(rows) {
           type: "bar",
           data: rows.map((row) => row.total_agua),
           borderColor: colors.blue,
-          backgroundColor: "rgba(37, 99, 235, 0.72)",
+          backgroundColor: "rgba(36, 84, 214, 0.72)",
           borderRadius: 4,
           yAxisID: "y",
         },
@@ -81,8 +88,8 @@ function renderClimaChart(rows) {
           label: "Temperatura promedio",
           type: "line",
           data: rows.map((row) => row.temp_promedio),
-          borderColor: colors.red,
-          backgroundColor: "rgba(194, 65, 53, 0.12)",
+          borderColor: colors.magenta,
+          backgroundColor: "rgba(182, 55, 120, 0.12)",
           yAxisID: "y1",
           tension: 0.25,
           pointRadius: rows.length === 1 ? 7 : 4,
@@ -94,6 +101,9 @@ function renderClimaChart(rows) {
       responsive: true,
       maintainAspectRatio: false,
       interaction: { mode: "index", intersect: false },
+      plugins: {
+        legend: { labels: { usePointStyle: true, boxWidth: 8 } },
+      },
       scales: {
         y: { beginAtZero: true, ticks: { callback: (value) => money.format(value) } },
         y1: { position: "right", grid: { drawOnChartArea: false } },
@@ -112,7 +122,9 @@ function renderAlcaldiaChart(rows) {
         {
           label: "Consumo total",
           data: rows.map((row) => row.total_agua),
-          backgroundColor: colors.teal,
+          backgroundColor: rows.map((row) =>
+            normalizeName(row.alcaldia) === normalizeName(selectedAlcaldia) ? colors.magenta : colors.teal,
+          ),
           borderRadius: 4,
         },
       ],
@@ -120,6 +132,9 @@ function renderAlcaldiaChart(rows) {
     options: {
       responsive: true,
       maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+      },
       scales: {
         x: { ticks: { maxRotation: 45, minRotation: 0 } },
         y: { beginAtZero: true, ticks: { callback: (value) => money.format(value) } },
@@ -137,7 +152,7 @@ function renderIndiceChart(rows) {
       datasets: [
         {
           data: rows.map((row) => row.total_agua),
-          backgroundColor: [colors.blue, colors.teal, colors.amber, colors.red],
+          backgroundColor: [colors.blue, colors.teal, colors.amber, colors.magenta],
           borderWidth: 0,
         },
       ],
@@ -185,25 +200,73 @@ function renderLegend(maxValue) {
 
   legend.innerHTML = `
     <span class="legend-title">Consumo total</span>
-    <div class="legend-scale">
-      ${steps
-        .map(
-          (step, index) => `
-            <span>
-              <i style="background:${mapColors[index]}"></i>
-              ${money.format(maxValue * step)}
-            </span>
-          `,
-        )
-        .join("")}
+    <div class="legend-gradient" aria-hidden="true"></div>
+    <div class="legend-range">
+      <span>${money.format(maxValue * steps[0])}</span>
+      <span>${money.format(maxValue)}</span>
     </div>
   `;
 }
 
+function populateAlcaldiaFilter(rows) {
+  const select = document.getElementById("alcaldia-filter");
+  const current = selectedAlcaldia;
+  const options = rows
+    .slice()
+    .sort((a, b) => a.alcaldia.localeCompare(b.alcaldia, "es"))
+    .map((row) => row.alcaldia);
+
+  select.innerHTML = `<option value="">Todas las alcaldias</option>${options
+    .map((alcaldia) => `<option value="${alcaldia}">${alcaldia}</option>`)
+    .join("")}`;
+
+  if (current && options.some((alcaldia) => normalizeName(alcaldia) === normalizeName(current))) {
+    select.value = current;
+  } else {
+    selectedAlcaldia = "";
+    select.value = "";
+  }
+}
+
+function renderTerritoryStats(rows) {
+  const sorted = rows.slice().sort((a, b) => (b.total_agua ?? 0) - (a.total_agua ?? 0));
+  const max = sorted[0];
+  const min = sorted[sorted.length - 1];
+  const selected = selectedAlcaldia
+    ? rows.find((row) => normalizeName(row.alcaldia) === normalizeName(selectedAlcaldia))
+    : null;
+
+  setText("rank-max-name", max?.alcaldia ?? "--");
+  setText("rank-max-value", max ? `${money.format(max.total_agua)} | #${max.ranking}` : "--");
+  setText("rank-min-name", min?.alcaldia ?? "--");
+  setText("rank-min-value", min ? `${money.format(min.total_agua)} | #${min.ranking}` : "--");
+
+  if (selected) {
+    setText("rank-selected-name", selected.alcaldia);
+    setText(
+      "rank-selected-value",
+      `${money.format(selected.total_agua)} | promedio ${number.format(selected.consumo_promedio)} | #${selected.ranking}`,
+    );
+  } else {
+    setText("rank-selected-name", "Todas");
+    setText("rank-selected-value", currentPeriodLabel());
+  }
+}
+
+function selectAlcaldia(alcaldia) {
+  selectedAlcaldia = alcaldia;
+  document.getElementById("alcaldia-filter").value = alcaldia;
+  renderMap(latestMapRows);
+  renderTerritoryStats(latestMapRows);
+}
+
 function renderMap(rows) {
   const map = initMap();
+  latestMapRows = rows;
+  const selectedKey = normalizeName(selectedAlcaldia);
   const byAlcaldia = new Map(rows.map((row) => [normalizeName(row.alcaldia), row]));
   const maxValue = Math.max(...rows.map((row) => row.total_agua ?? 0), 0);
+  let selectedLayer = null;
 
   if (consumoLayer) {
     consumoLayer.removeFrom(map);
@@ -211,47 +274,51 @@ function renderMap(rows) {
 
   consumoLayer = L.geoJSON(alcaldiasGeoJson, {
     style(feature) {
-      const data = byAlcaldia.get(normalizeName(feature.properties.NOMGEO));
+      const featureKey = normalizeName(feature.properties.NOMGEO);
+      const data = byAlcaldia.get(featureKey);
+      const isSelected = selectedKey && featureKey === selectedKey;
+      const isDimmed = selectedKey && !isSelected;
       return {
-        color: "#ffffff",
-        fillColor: getMapColor(data?.total_agua, maxValue),
-        fillOpacity: data ? 0.86 : 0.35,
+        color: isSelected ? "#172326" : "#ffffff",
+        fillColor: isSelected ? colors.magenta : getMapColor(data?.total_agua, maxValue),
+        fillOpacity: data ? (isDimmed ? 0.22 : 0.88) : 0.2,
         opacity: 1,
-        weight: 1.4,
+        weight: isSelected ? 2.8 : 1.4,
       };
     },
     onEachFeature(feature, layer) {
       const nombre = feature.properties.NOMGEO;
-      const data = byAlcaldia.get(normalizeName(nombre));
+      const featureKey = normalizeName(nombre);
+      const data = byAlcaldia.get(featureKey);
+      const isSelected = selectedKey && featureKey === selectedKey;
       const tooltip = data
         ? `<strong>${nombre}</strong><br>Total: ${money.format(data.total_agua)}<br>Promedio: ${number.format(data.consumo_promedio)}<br>Ranking: #${data.ranking}`
         : `<strong>${nombre}</strong><br>Sin datos de consumo`;
 
+      if (isSelected) selectedLayer = layer;
       layer.bindTooltip(tooltip, { sticky: true, direction: "top" });
       layer.on({
+        click() {
+          if (data) selectAlcaldia(data.alcaldia);
+        },
         mouseover(event) {
-          event.target.setStyle({ color: "#172326", fillOpacity: 0.96, weight: 2.4 });
-          if (data) {
-            setText(
-              "map-selection",
-              `${nombre}: ${money.format(data.total_agua)} | ranking #${data.ranking}`,
-            );
-          } else {
-            setText("map-selection", `${nombre}: sin datos`);
-          }
+          event.target.setStyle({ color: "#172326", fillOpacity: 0.98, weight: 2.6 });
         },
         mouseout(event) {
           consumoLayer.resetStyle(event.target);
-          setText("map-selection", selectedBimestre ? `Filtro B${selectedBimestre}` : "Todas las alcaldías");
         },
       });
     },
   }).addTo(map);
 
-  map.fitBounds(consumoLayer.getBounds(), { padding: [18, 18] });
+  if (selectedLayer) {
+    map.fitBounds(selectedLayer.getBounds(), { padding: [42, 42], maxZoom: 12 });
+  } else {
+    map.fitBounds(consumoLayer.getBounds(), { padding: [18, 18] });
+  }
+
   setTimeout(() => map.invalidateSize(), 0);
   renderLegend(maxValue);
-  setText("map-selection", selectedBimestre ? `Filtro B${selectedBimestre}` : "Todas las alcaldías");
 }
 
 function renderTable(rows) {
@@ -281,7 +348,7 @@ function apiUrl(path) {
 
 async function loadDashboard() {
   try {
-    setText("status", selectedBimestre ? `Cargando B${selectedBimestre}` : "Cargando datos");
+    setText("status", selectedBimestre ? `Cargando bimestre ${selectedBimestre}` : "Cargando datos");
     const [kpis, consumoClima, alcaldias, indices, mapaConsumo, geoJson] = await Promise.all([
       getJson(apiUrl("/api/kpis")),
       getJson(apiUrl("/api/consumo-clima")),
@@ -292,13 +359,15 @@ async function loadDashboard() {
     ]);
 
     alcaldiasGeoJson = geoJson;
+    populateAlcaldiaFilter(mapaConsumo);
     renderKpis(kpis);
-    renderClimaChart(consumoClima);
+    renderMap(mapaConsumo);
+    renderTerritoryStats(mapaConsumo);
     renderAlcaldiaChart(alcaldias);
     renderIndiceChart(indices);
-    renderMap(mapaConsumo);
+    renderClimaChart(consumoClima);
     renderTable(consumoClima);
-    setText("status", selectedBimestre ? `Filtro B${selectedBimestre}` : "Datos actualizados");
+    setText("status", selectedBimestre ? `Bimestre ${selectedBimestre}` : "Datos actualizados");
   } catch (error) {
     console.error(error);
     setText("status", "Error al cargar");
@@ -313,6 +382,10 @@ function initFilters() {
       button.classList.add("active");
       loadDashboard();
     });
+  });
+
+  document.getElementById("alcaldia-filter").addEventListener("change", (event) => {
+    selectAlcaldia(event.target.value);
   });
 }
 

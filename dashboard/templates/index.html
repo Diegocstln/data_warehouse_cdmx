@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Dashboard DW CDMX</title>
+    <title>Dashboard de Consumo de Agua CDMX 2019</title>
     <link
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css"
@@ -16,7 +16,8 @@
     <header class="topbar">
       <div>
         <p class="eyebrow">Data Warehouse CDMX</p>
-        <h1>Consumo de agua y clima</h1>
+        <h1>Dashboard de Consumo de Agua CDMX 2019</h1>
+        <p class="subtitle">Analisis por bimestre, alcaldia e indice de desarrollo.</p>
       </div>
       <span class="status" id="status">Cargando datos</span>
     </header>
@@ -36,21 +37,80 @@
       </section>
 
       <section class="kpis" aria-label="Indicadores principales">
-        <article class="metric">
+        <article class="metric metric-primary">
           <span>Consumo total</span>
           <strong id="kpi-total">--</strong>
         </article>
         <article class="metric">
-          <span>Consumo promedio</span>
+          <span>Promedio por registro</span>
           <strong id="kpi-promedio">--</strong>
         </article>
         <article class="metric">
-          <span>Bimestres</span>
+          <span>Periodos</span>
           <strong id="kpi-bimestres">--</strong>
         </article>
         <article class="metric">
-          <span>Correlación temp.</span>
+          <span>Relacion con temperatura</span>
           <strong id="kpi-correlacion">--</strong>
+        </article>
+      </section>
+
+      <section class="panel wide map-panel map-spotlight">
+        <div class="panel-heading map-heading">
+          <div>
+            <p class="eyebrow">Territorio</p>
+            <h2>Mapa de consumo por alcaldia</h2>
+            <p>Intensidad territorial del consumo total de agua.</p>
+          </div>
+          <div class="map-controls" aria-label="Filtros del mapa">
+            <label for="alcaldia-filter">Alcaldia</label>
+            <select id="alcaldia-filter">
+              <option value="">Todas las alcaldias</option>
+            </select>
+          </div>
+        </div>
+        <div class="map-summary" aria-label="Resumen territorial">
+          <article>
+            <span>Mayor consumo</span>
+            <strong id="rank-max-name">--</strong>
+            <small id="rank-max-value">--</small>
+          </article>
+          <article>
+            <span>Menor consumo</span>
+            <strong id="rank-min-name">--</strong>
+            <small id="rank-min-value">--</small>
+          </article>
+          <article>
+            <span>Seleccion actual</span>
+            <strong id="rank-selected-name">Todas</strong>
+            <small id="rank-selected-value">Vista CDMX completa</small>
+          </article>
+        </div>
+        <div class="map-shell">
+          <div id="consumoMap" class="consumo-map" aria-label="Mapa coropletico de consumo por alcaldia"></div>
+          <div class="map-legend" id="map-legend" aria-label="Leyenda de consumo"></div>
+        </div>
+      </section>
+
+      <section class="grid analysis-grid">
+        <article class="panel">
+          <div class="panel-heading">
+            <h2>Top alcaldias</h2>
+            <p>Consumo total acumulado.</p>
+          </div>
+          <div class="chart-wrap chart-wrap-compact">
+            <canvas id="alcaldiaChart"></canvas>
+          </div>
+        </article>
+
+        <article class="panel">
+          <div class="panel-heading">
+            <h2>Indice de desarrollo</h2>
+            <p>Distribucion por clasificacion.</p>
+          </div>
+          <div class="chart-wrap chart-wrap-compact">
+            <canvas id="indiceChart"></canvas>
+          </div>
         </article>
       </section>
 
@@ -64,46 +124,10 @@
         </div>
       </section>
 
-      <section class="grid">
-        <article class="panel">
-          <div class="panel-heading">
-            <h2>Top alcaldías</h2>
-            <p>Consumo total acumulado.</p>
-          </div>
-          <div class="chart-wrap">
-            <canvas id="alcaldiaChart"></canvas>
-          </div>
-        </article>
-
-        <article class="panel">
-          <div class="panel-heading">
-            <h2>Índice de desarrollo</h2>
-            <p>Distribución por clasificación.</p>
-          </div>
-          <div class="chart-wrap">
-            <canvas id="indiceChart"></canvas>
-          </div>
-        </article>
-      </section>
-
-      <section class="panel wide map-panel">
-        <div class="panel-heading map-heading">
-          <div>
-            <h2>Mapa de consumo por alcaldía</h2>
-            <p>Intensidad territorial del consumo total de agua.</p>
-          </div>
-          <div class="map-selection" id="map-selection">Selecciona una alcaldía</div>
-        </div>
-        <div class="map-shell">
-          <div id="consumoMap" class="consumo-map" aria-label="Mapa coroplético de consumo por alcaldía"></div>
-          <div class="map-legend" id="map-legend" aria-label="Leyenda de consumo"></div>
-        </div>
-      </section>
-
       <section class="panel wide">
         <div class="panel-heading">
           <h2>Resumen bimestral</h2>
-          <p>Datos base de la vista analítica.</p>
+          <p>Datos base de la vista analitica.</p>
         </div>
         <div class="table-wrap">
           <table>
