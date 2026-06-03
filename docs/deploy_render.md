@@ -10,6 +10,8 @@ Esta configuracion despliega el dashboard con FastAPI real y una base PostgreSQL
 
 El servicio usa `dashboard/Dockerfile.render`. Ese Dockerfile copia el dashboard, los CSV, el DDL y el ETL dentro de la imagen. Al arrancar, FastAPI revisa si `fact_consumo_agua` ya tiene datos; si la base esta vacia, ejecuta el DDL, carga los CSV en staging y corre el ETL.
 
+Si `data/consumo_agua_historico_2019.csv` viene vacio en el repo, el bootstrap lo descarga desde el recurso oficial de Datos Abiertos CDMX antes de cargar la base.
+
 ## Pasos
 
 1. Entra a Render: https://render.com
@@ -32,6 +34,7 @@ https://data-warehouse-cdmx-dashboard.onrender.com
 
 - `DATABASE_URL`: connection string de la base PostgreSQL gestionada.
 - `DW_AUTO_INIT=true`: permite inicializar la base si esta vacia.
+- `CONSUMO_CSV_URL`: opcional para cambiar la URL remota del CSV de consumo.
 
 ## Verificacion
 
