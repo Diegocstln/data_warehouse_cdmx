@@ -37,3 +37,32 @@ SELECT alcaldia, colonia, COUNT(*) AS duplicados
 FROM dim_ubicacion
 GROUP BY alcaldia, colonia
 HAVING COUNT(*) > 1;
+
+-- Debe regresar cero filas: alcaldías del mapa sin datos en el Data Warehouse.
+WITH alcaldias_mapa(alcaldia) AS (
+    VALUES
+        ('Álvaro Obregón'),
+        ('Azcapotzalco'),
+        ('Benito Juárez'),
+        ('Coyoacán'),
+        ('Cuajimalpa de Morelos'),
+        ('Cuauhtémoc'),
+        ('Gustavo A. Madero'),
+        ('Iztacalco'),
+        ('Iztapalapa'),
+        ('La Magdalena Contreras'),
+        ('Miguel Hidalgo'),
+        ('Milpa Alta'),
+        ('Tláhuac'),
+        ('Tlalpan'),
+        ('Venustiano Carranza'),
+        ('Xochimilco')
+), alcaldias_dw AS (
+    SELECT DISTINCT alcaldia
+    FROM vw_consumo_por_alcaldia
+)
+SELECT m.alcaldia AS alcaldia_sin_datos
+FROM alcaldias_mapa m
+LEFT JOIN alcaldias_dw d ON lower(unaccent(m.alcaldia)) = lower(unaccent(d.alcaldia))
+WHERE d.alcaldia IS NULL
+ORDER BY m.alcaldia;
