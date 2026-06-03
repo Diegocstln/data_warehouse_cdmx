@@ -2,6 +2,7 @@ services:
   - type: web
     name: data-warehouse-cdmx-dashboard
     runtime: docker
+    plan: free
     dockerfilePath: ./dashboard/Dockerfile.render
     dockerContext: .
     envVars:
@@ -14,5 +15,6 @@ services:
 
 databases:
   - name: data-warehouse-cdmx-db
+    plan: free
     databaseName: data_warehouse
     user: data_warehouse_user
