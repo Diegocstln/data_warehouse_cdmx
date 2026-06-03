@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: data-warehouse-cdmx-dashboard
+    runtime: docker
+    dockerfilePath: ./dashboard/Dockerfile.render
+    dockerContext: .
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: data-warehouse-cdmx-db
+          property: connectionString
+      - key: DW_AUTO_INIT
+        value: "true"
+
+databases:
+  - name: data-warehouse-cdmx-db
+    databaseName: data_warehouse
+    user: data_warehouse_user
