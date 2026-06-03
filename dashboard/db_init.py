@@ -62,9 +62,13 @@ def _ensure_consumo_csv() -> None:
     _download_file(CONSUMO_CSV_URL, CONSUMO_CSV)
 
 
-def _copy_csv(cursor, table: str, path: Path) -> None:
+def _copy_csv(cursor, table: str, path: Path, null_value: str | None = None) -> None:
+    options = "FORMAT CSV, HEADER TRUE"
+    if null_value is not None:
+        options += f", NULL '{null_value}'"
+
     with path.open("r", encoding="utf-8", newline="") as file:
-        with cursor.copy(f"COPY {table} FROM STDIN WITH (FORMAT CSV, HEADER TRUE)") as copy:
+        with cursor.copy(f"COPY {table} FROM STDIN WITH ({options})") as copy:
             while chunk := file.read(1024 * 1024):
                 copy.write(chunk)
 
@@ -96,7 +100,7 @@ def initialize_warehouse_if_needed() -> None:
 
             cursor.execute(RESET_SQL)
             _execute_sql_file(cursor, DDL_PATH)
-            _copy_csv(cursor, "staging_consumo", CONSUMO_CSV)
+            _copy_csv(cursor, "staging_consumo", CONSUMO_CSV, null_value="NA")
             _copy_csv(cursor, "staging_clima", CLIMA_CSV)
             _execute_sql_file(cursor, DIM_PATH)
             _execute_sql_file(cursor, FACT_PATH)
