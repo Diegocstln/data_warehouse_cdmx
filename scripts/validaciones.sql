@@ -60,9 +60,17 @@ WITH alcaldias_mapa(alcaldia) AS (
 ), alcaldias_dw AS (
     SELECT DISTINCT alcaldia
     FROM vw_consumo_por_alcaldia
+), normalizados AS (
+    SELECT
+        m.alcaldia AS alcaldia_mapa,
+        translate(lower(m.alcaldia), 'áéíóúü', 'aeiouu') AS mapa_key,
+        d.alcaldia AS alcaldia_dw,
+        translate(lower(d.alcaldia), 'áéíóúü', 'aeiouu') AS dw_key
+    FROM alcaldias_mapa m
+    LEFT JOIN alcaldias_dw d
+      ON translate(lower(m.alcaldia), 'áéíóúü', 'aeiouu') = translate(lower(d.alcaldia), 'áéíóúü', 'aeiouu')
 )
-SELECT m.alcaldia AS alcaldia_sin_datos
-FROM alcaldias_mapa m
-LEFT JOIN alcaldias_dw d ON lower(unaccent(m.alcaldia)) = lower(unaccent(d.alcaldia))
-WHERE d.alcaldia IS NULL
-ORDER BY m.alcaldia;
+SELECT alcaldia_mapa AS alcaldia_sin_datos
+FROM normalizados
+WHERE alcaldia_dw IS NULL
+ORDER BY alcaldia_mapa;
