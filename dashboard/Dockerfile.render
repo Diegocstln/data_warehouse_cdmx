@@ -1,0 +1,18 @@
+FROM python:3.12-slim
+
+ENV PYTHONUNBUFFERED=1
+
+WORKDIR /app
+
+COPY dashboard/requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY dashboard/ .
+COPY data/ ./data/
+COPY ddl/ ./ddl/
+COPY etl/ ./etl/
+COPY scripts/ ./scripts/
+
+EXPOSE 10000
+
+CMD ["sh", "-c", "uvicorn app:app --host 0.0.0.0 --port ${PORT:-10000}"]
