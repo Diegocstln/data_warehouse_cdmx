@@ -4,8 +4,13 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Dashboard DW CDMX</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css"
+    />
     <link rel="stylesheet" href="/static/styles.css" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
   </head>
   <body>
     <header class="topbar">
@@ -79,6 +84,20 @@
             <canvas id="indiceChart"></canvas>
           </div>
         </article>
+      </section>
+
+      <section class="panel wide map-panel">
+        <div class="panel-heading map-heading">
+          <div>
+            <h2>Mapa de consumo por alcaldía</h2>
+            <p>Intensidad territorial del consumo total de agua.</p>
+          </div>
+          <div class="map-selection" id="map-selection">Selecciona una alcaldía</div>
+        </div>
+        <div class="map-shell">
+          <div id="consumoMap" class="consumo-map" aria-label="Mapa coroplético de consumo por alcaldía"></div>
+          <div class="map-legend" id="map-legend" aria-label="Leyenda de consumo"></div>
+        </div>
       </section>
 
       <section class="panel wide">

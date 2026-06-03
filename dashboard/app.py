@@ -115,6 +115,35 @@ def consumo_alcaldia(limit: int = 10, bimestre: int | None = None) -> list[dict[
     )
 
 
+@app.get("/api/mapa-consumo")
+def mapa_consumo(bimestre: int | None = None) -> list[dict[str, Any]]:
+    where = "WHERE bimestre = %s" if bimestre else ""
+    params = (bimestre,) if bimestre else ()
+    return query(
+        f"""
+        WITH consumo AS (
+            SELECT
+                alcaldia,
+                ROUND(SUM(total_agua), 2) AS total_agua,
+                ROUND(AVG(consumo_promedio), 2) AS consumo_promedio,
+                SUM(registros)::INT AS registros
+            FROM vw_consumo_por_alcaldia
+            {where}
+            GROUP BY alcaldia
+        )
+        SELECT
+            alcaldia,
+            total_agua,
+            consumo_promedio,
+            registros,
+            ROW_NUMBER() OVER (ORDER BY total_agua DESC) AS ranking
+        FROM consumo
+        ORDER BY ranking;
+        """,
+        params,
+    )
+
+
 @app.get("/api/consumo-indice")
 def consumo_indice(bimestre: int | None = None) -> list[dict[str, Any]]:
     where = "WHERE bimestre = %s" if bimestre else ""
