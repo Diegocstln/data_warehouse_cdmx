@@ -1,6 +1,4 @@
-import os
 import time
-from decimal import Decimal
 from typing import Any
 
 import psycopg
@@ -8,33 +6,26 @@ from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from psycopg.rows import dict_row
 from starlette.requests import Request
 
+from db import connect, normalize
+from db_init import initialize_warehouse_if_needed
 
-DB_CONFIG = {
-    "host": os.getenv("DB_HOST", "localhost"),
-    "port": int(os.getenv("DB_PORT", "5432")),
-    "dbname": os.getenv("DB_NAME", "data_warehouse"),
-    "user": os.getenv("DB_USER", "postgres"),
-    "password": os.getenv("DB_PASSWORD", "postgres"),
-}
 
 app = FastAPI(title="Dashboard Data Warehouse CDMX")
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
 
-def normalize(value: Any) -> Any:
-    if isinstance(value, Decimal):
-        return float(value)
-    return value
+@app.on_event("startup")
+def startup() -> None:
+    initialize_warehouse_if_needed()
 
 
 def query(sql: str, params: tuple[Any, ...] = ()) -> list[dict[str, Any]]:
     for attempt in range(12):
         try:
-            with psycopg.connect(**DB_CONFIG, row_factory=dict_row) as conn:
+            with connect() as conn:
                 with conn.cursor() as cur:
                     cur.execute(sql, params)
                     rows = cur.fetchall()
